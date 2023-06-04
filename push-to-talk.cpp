@@ -8,14 +8,12 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string>
+#include <map>
 
-/* See https://github.com/torvalds/linux/blob/master/include/uapi/linux/input-event-codes.h */
-#define PTT_EV_KEY_CODE KEY_LEFTMETA
-/*
- * Full list (Ignore leading XKB_KEY_):
- * https://github.com/xkbcommon/libxkbcommon/blob/master/include/xkbcommon/xkbcommon-keysyms.h
- */
-#define PTT_XKEY_EVENT "Super_L"
+using namespace std;
+
+map<int, char*> keyMap = {{ KEY_F20, "F20" }, { KEY_F21, "F21" }};
 
 int main(int argc, char **argv)
 {
@@ -63,11 +61,11 @@ int main(int argc, char **argv)
     if (rc != LIBEVDEV_READ_STATUS_SUCCESS)
       continue;
 
-    if (ev.type == EV_KEY && ev.code == PTT_EV_KEY_CODE && ev.value != 2) {
+    if (ev.type == EV_KEY && keyMap.count(ev.code) && ev.value != 2) {
       if (ev.value == 1)
-        xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, PTT_XKEY_EVENT, 0);
+        xdo_send_keysequence_window_down(xdo, CURRENTWINDOW, keyMap.at(ev.code), 0);
       else
-        xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, PTT_XKEY_EVENT, 0);
+        xdo_send_keysequence_window_up(xdo, CURRENTWINDOW, keyMap.at(ev.code), 0);
     }
   } while (rc == LIBEVDEV_READ_STATUS_SYNC || rc == LIBEVDEV_READ_STATUS_SUCCESS || rc == -EAGAIN);
 
